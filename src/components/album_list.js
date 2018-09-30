@@ -4,11 +4,14 @@ import '../App.css';
 class AlbumList extends Component {
     render() {
       return (
-        <ul>
-            {[...Array(5).keys()].map((i) => 
-                (<li key={i}>rendering {i}</li>)
-            )}
-        </ul>
+        <div>
+          <h1>Photo Album</h1>
+          <ul>
+              {[...Array(5).keys()].map((i) => 
+                  (<li key={i}>rendering {i}</li>)
+              )}
+          </ul>
+        </div>
       );
     }
   }

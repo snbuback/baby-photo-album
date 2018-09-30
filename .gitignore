@@ -20,6 +20,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# since we are using sass
+src/**/*.css
+
 # Container wrappers
 .wrappers
 
