@@ -3,7 +3,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { HashRouter as Router } from 'react-router-dom';
 import App from './components/app';
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 
 render((
   <Router>
@@ -11,4 +11,5 @@ render((
   </Router>
   ), document.getElementById('root'));  // eslint: global: document
 
-registerServiceWorker();
+// TODO Enabled this in production
+// registerServiceWorker();

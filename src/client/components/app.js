@@ -10,7 +10,7 @@ class App extends Component {
         <Row>
           <Col>
             <h1 className="display-3">Photo Album</h1>
-            <h2>The story of a little baby</h2>
+            <h2>The story of a little baby!</h2>
           </Col>
         </Row>
         <AlbumList />
