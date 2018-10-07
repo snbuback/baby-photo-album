@@ -1,4 +1,13 @@
 {
-    "presets": ["@babel/preset-env", "@babel/preset-react"],      
-    "plugins": ["@babel/plugin-proposal-class-properties"]
+    "presets": [
+        ["@babel/preset-env", {
+            "targets": {
+                "node": "current",
+                "chrome": "69",
+                "safari": "12"
+            }
+        }],
+        "@babel/preset-react"
+    ],
+    "plugins": ["@babel/plugin-proposal-class-properties", "emotion"]
 }

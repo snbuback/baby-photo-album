@@ -6,7 +6,11 @@ class Album {
     }
 
     get image() {
-        return this.coverPhoto.image;
+        return this.coverPhoto ? this.coverPhoto.image : null;
+    }
+
+    toString() {
+        return `Album ${this.name}`;
     }
 }
 
@@ -16,6 +20,10 @@ class Photo {
         this.name = name;
         this.image = image;
         this.comment = comment;
+    }
+
+    toString() {
+        return `Photo ${this.name}: ${this.image}`;
     }
 }
 

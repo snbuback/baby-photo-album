@@ -11,13 +11,15 @@ class AlbumCover extends Component {
     };
   
     getStyle() {
-      return {
+      return this.props.album.image ? {
         backgroundImage: `url(${this.props.album.image})`
-      }
+      } : {
+        backgroundColor: '#495057'
+      };
     }
 
     getClassName() {
-        return `p-2 border d-flex album album-size-${this.props.index % 3 + 1}`
+        return `p-2 border d-flex album album-size-${this.props.index % 3 + 1}`;
     }
   
     render() {

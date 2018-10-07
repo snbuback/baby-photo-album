@@ -6,10 +6,10 @@ import App from './components/app';
 // import registerServiceWorker from './registerServiceWorker';
 
 render((
-  <Router>
-      <App />
-  </Router>
-  ), document.getElementById('root'));  // eslint: global: document
+    <Router hashType="noslash">
+        <App />
+    </Router>
+), document.getElementById('root'));  // eslint: global: document
 
 // TODO Enabled this in production
 // registerServiceWorker();
