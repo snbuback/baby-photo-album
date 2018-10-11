@@ -15,24 +15,25 @@ class AppConfig {
             // accessTokenUri: 'https://github.com/login/oauth/access_token',
             authorizationUri: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
             redirectUri: 'http://localhost:3000/',
-            scopes: ['user.read', 'files.read', 'files.read.all', 'sites.read.all']
+            scopes: ['user.read', 'files.read', 'files.read.all', 'sites.read.all', 'sites.readwrite.all', 'files.readwrite.all']
         });
     }
 
     _setup(signer) {
         this._signer = signer;
-        // clear token in URL
-        // window.location.hash = '';
-        // this.client = Client.init({
-        //     authProvider: (done) => {
-        //         done(null, signer.accessToken); //first parameter takes an error if you can't get an access token
-        //     }
-        // });
     }
 
     getAuthStatus(callback) {
         if (this._signer !== null) {
             console.debug('already authenticated');
+            callback(true);
+            return;
+        }
+
+        // check localStore
+        let keyStorage = window.localStorage.getItem('key');
+        if (keyStorage) {
+            this._setup({accessToken: keyStorage});
             callback(true);
             return;
         }
@@ -46,6 +47,7 @@ class AppConfig {
         };
         const success = (signer) => {
             console.debug('authenticated', signer);
+            window.localStorage.setItem('key', signer.accessToken);
             this._setup(signer);
             callback(true);
         };
@@ -54,6 +56,8 @@ class AppConfig {
         this._oauth2.token.getToken(url).then(
             (signer) => {
                 if (signer && signer.accessToken) {
+                    // clear token in URL
+                    window.location.hash = '';
                     success(signer);
                 } else {
                     failed();
@@ -66,33 +70,50 @@ class AppConfig {
     }
 
     get(url) {
-        // return this.client.api(url).get();
-        return request(this._signer.sign({
+        return request({
             method: 'GET',
             url: this._baseurl + url,
             headers: {'Authorization': 'Bearer ' + this._signer.accessToken}
-          })).use(plugins.parse('json'));
+          }).use(plugins.parse('json'));
     }
 
     getAlbums() {
         return this.get('/me/drive/root:/Photos:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
             (json) => {
                 const folders = json.body.children;
-                // pending support pagination with @odata.nextLink parameter
+                console.debug('folders=', folders);
+                // TODO pending support pagination with @odata.nextLink parameter
                 return folders.map((element) => {
-                    // if (item.thumbnails && item.thumbnails.length > 0) {
-                    //     var container = $("<div>").attr("class", "img-container").appendTo(tile)
-                    //     $("<img>").
-                    //       attr("src", item.thumbnails[0][thumbnailSize].url).
-                    //       appendTo(container);
-                    //   }
-                    const albumName = element.name;
                     const albumId = element.id;
+                    const albumName = element.name;
                     let coverPhoto = null;
                     if (element.thumbnails && element.thumbnails.length > 0) {
                         coverPhoto = new Photo(`thumb-${albumId}`, null, element.thumbnails[0]['large'].url, null);
                     }
                     return new Album(albumId, albumName, coverPhoto);
+                });
+            },
+            (err) => err);
+    }
+
+    getPhotos(albumId) {
+        // E4876DE43FA0DA3!3645
+        // /me/drive/items/${albumId}/children?expand=thumbnails,children(expand=thumbnails(select=large))
+        return this.get(`/me/drive/items/${albumId}/children?expand=thumbnails`).then(
+            (json) => {
+                console.info('json=', json);
+                window.json = json;
+                const photos = json.body.value;
+                // TODO pending support pagination with @odata.nextLink parameter
+                // filtering photos
+                return photos.filter((e) => e['photo']).map((element) => {
+                    const photoId = element.id;
+                    const photoName = element.description;
+                    let photoImg = null;
+                    if (element.thumbnails && element.thumbnails.length > 0) {
+                        photoImg = element.thumbnails[0]['large'].url;
+                    }
+                    return new Photo(photoId, photoName, photoImg, null);
                 });
             },
             (err) => err);

@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { Container, Row, Col } from 'reactstrap';
 import { RingLoader } from 'react-spinners';
+import { Route } from 'react-router-dom';
 import appConfig from './app_config';
 import AlbumList from "./album_list";
+import PhotoListing from "./photo_listing";
 import '../App.css';
 
 class App extends Component {
@@ -13,7 +15,6 @@ class App extends Component {
 
     componentDidMount() {
         // get authentication status
-        console.info('called;');
         appConfig.getAuthStatus((status) => this.setState({ granted: status }));
     }
 
@@ -26,7 +27,8 @@ class App extends Component {
                         <h2>The story of a little baby!</h2>
                     </Col>
                 </Row>
-                <AlbumList />
+                <Route exact path="/" component={AlbumList} />
+                <Route path="/album/:albumId" component={PhotoListing} />
             </Container>
         );
     }

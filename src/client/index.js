@@ -7,7 +7,7 @@ import App from './components/app';
 
 render((
     <Router hashType="noslash">
-        <App />
+        <App></App>
     </Router>
 ), document.getElementById('root'));  // eslint: global: document
 
