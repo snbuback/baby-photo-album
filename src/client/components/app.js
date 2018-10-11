@@ -28,7 +28,7 @@ class App extends Component {
                     </Col>
                 </Row>
                 <Route exact path="/" component={AlbumList} />
-                <Route path="/album/:albumId" component={PhotoListing} />
+                <Route path="/album/:albumId(.*)" component={PhotoListing} />
             </Container>
         );
     }

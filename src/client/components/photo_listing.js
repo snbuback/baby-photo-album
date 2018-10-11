@@ -13,6 +13,7 @@ class PhotoView extends Component {
                 <figure className="figure photo">
                     <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
                     <figcaption className="figure-caption">{this.props.photo.name}</figcaption>
+                    {this.props.photo.comment ? <p>{this.props.photo.comment}</p> : null}
                 </figure>
             </div>
         );
@@ -31,6 +32,7 @@ class PhotoListing extends Component {
     }
 
     componentDidMount() {
+        console.info(`Requesting photo of path: "${this.props.match.params.albumId}"`);
         apiConfig.getPhotos(this.props.match.params.albumId).then((photos) => this.setState({ photos: photos }));
     }
 

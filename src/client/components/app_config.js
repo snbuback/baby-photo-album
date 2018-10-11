@@ -1,6 +1,7 @@
 import ClientOAuth2 from 'client-oauth2';
 import {plugins, request} from 'popsicle';
 import { Album, Photo } from '../api/model';
+import Promise from "promise";
 
 /**
  * Contains all Api and app parameters
@@ -23,6 +24,14 @@ class AppConfig {
         this._signer = signer;
     }
 
+    _authenticate() {
+        window.localStorage.removeItem('key');
+        let url = this._oauth2.token.getUri();
+        console.debug(`no authentication... redirecting to ${url}`);
+        // redirect to authenticate
+        window.location = url;
+    }
+
     getAuthStatus(callback) {
         if (this._signer !== null) {
             console.debug('already authenticated');
@@ -39,10 +48,7 @@ class AppConfig {
         }
 
         const failed = () => {
-            let url = this._oauth2.token.getUri();
-            console.debug(`no authentication... redirecting to ${url}`);
-            // redirect to authenticate
-            window.location = url;
+            this._authenticate();
             callback(false);
         };
         const success = (signer) => {
@@ -69,12 +75,26 @@ class AppConfig {
         );
     }
 
-    get(url) {
-        return request({
+    get(url, json=true) {
+        let response = request({
             method: 'GET',
             url: this._baseurl + url,
             headers: {'Authorization': 'Bearer ' + this._signer.accessToken}
-          }).use(plugins.parse('json'));
+        });
+
+        if (json) {
+            response = response.use(plugins.parse('json'));
+        }
+        return response.then((response) => {
+            if (response.status == 401) {
+                this._authenticate();
+                return null;
+            }
+            if (response.status != 200) {
+                throw `Invalid status code: ${json.status}`;
+            }
+            return response;
+        });
     }
 
     getAlbums() {
@@ -96,29 +116,58 @@ class AppConfig {
             (err) => err);
     }
 
+    _getComments(directoryListing) {
+        return new Promise((resolve) => {
+            for (let element of directoryListing) {
+                if (element.name == 'comments.json') {
+                    // returns a promise with comments file content
+                    const contentPromise = this.get(`/me/drive/items/${element.id}/content`).then((content) => {
+                        console.info('content', content.body);
+                        return content.body;
+                    });
+                    resolve(contentPromise);
+                    return;
+                }
+            }
+            // not found returns empty element
+            console.info('Comments not found');
+            resolve({});
+        });
+    }
+
     getPhotos(albumId) {
         // E4876DE43FA0DA3!3645
         // /me/drive/items/${albumId}/children?expand=thumbnails,children(expand=thumbnails(select=large))
         return this.get(`/me/drive/items/${albumId}/children?expand=thumbnails`).then(
             (json) => {
                 console.info('json=', json);
-                window.json = json;
-                const photos = json.body.value;
+                const directoryListing = json.body.value;
                 // TODO pending support pagination with @odata.nextLink parameter
+                return directoryListing;
+            }).then((directoryListing) => {
+                return new Promise((resolve, reject) => {
+                    this._getComments(directoryListing).then((comments) => {
+                        console.log("comments=", comments);
+                        resolve({
+                            directoryListing: directoryListing,
+                            comments: comments
+                        });
+                    }).catch((err) => reject(err));
+                });
+            }).then(({directoryListing, comments}) => {
                 // filtering photos
-                return photos.filter((e) => e['photo']).map((element) => {
+                return directoryListing.filter((e) => e['photo']).map((element) => {
                     const photoId = element.id;
                     const photoName = element.description;
                     let photoImg = null;
                     if (element.thumbnails && element.thumbnails.length > 0) {
                         photoImg = element.thumbnails[0]['large'].url;
                     }
-                    return new Photo(photoId, photoName, photoImg, null);
+                    console.debug('photo=', element.name, 'comments', comments[element.name]);
+                    return new Photo(photoId, photoName, photoImg, comments[element.name]);
                 });
-            },
-            (err) => err);
+            });
     }
-
 }
 
 // singleton reference to AppConfig
