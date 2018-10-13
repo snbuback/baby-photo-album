@@ -7,12 +7,16 @@ import '../App.css';
 import EditableText from './editable_text';
 
 class PhotoView extends Component {
+    constructor(props) {
+        super(props);
+        this.updateComment = this.updateComment.bind(this);
+    }
 
-    updateCommentFunc() {
-        return (value) => {
-            console.info('this===', this);
-            return apiConfig.updatePhoto(this.props.photo, value);
-        };
+    updateComment(value) {
+        return apiConfig.updatePhoto(this.props.photo, value).then(() => {
+            this.props.photo.comment = value;
+            this.setState({});
+        });
     }
 
     render() {
@@ -21,7 +25,7 @@ class PhotoView extends Component {
                 <figure className="figure photo">
                     <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
                     <figcaption className="figure-caption">{this.props.photo.name}</figcaption>
-                    <EditableText text={this.props.photo.comment} updateFunc={this.updateCommentFunc()} />
+                    <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
                 </figure>
             </div>
         );
