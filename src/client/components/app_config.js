@@ -1,13 +1,82 @@
+/* global Map */
 import ClientOAuth2 from 'client-oauth2';
 import {plugins, request} from 'popsicle';
 import { Album, Photo } from '../api/model';
 import Promise from "promise";
 
+class Cache {
+    STORAGE_KEY = 'storageCache';
+    constructor() {
+        this._map = new Map();
+        this._load();
+    }
+
+    _load() {
+        let raw_content = window.localStorage.getItem(this.STORAGE_KEY);
+        if (raw_content) {
+            this._map = new Map(JSON.parse(raw_content));
+        }
+    }
+
+    _persist() {
+        window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...this._map]));
+    }
+
+    clear() {
+        this._map.clear();
+        this._persist();
+    }
+
+    get(key) {
+        return this._map.get(key);
+    }
+
+    getOrSet(key, func) {
+        let value = this.get(key);
+        if (value === undefined) {
+            value = func();
+            this.set(key, value);
+        }
+        return value;
+    }
+
+    async asyncGetOrSet(key, func) {
+        let value = this.get(key);
+        if (value === undefined) {
+            value = func().then((result) => {
+                this.set(key, result);
+                return result;
+            });
+        } else {
+            value = new Promise.resolve(value);
+        }
+        return value;
+    }
+
+    set(key, value) {
+        if (value === null || value == undefined) {
+            this.del(key);
+        } else {
+            this._map.set(key, value);
+        }
+        this._persist();
+        return value;
+    }
+
+    del(key) {
+        this._map.delete(key);
+        this._persist();
+        return this;
+    }
+}
+
 /**
  * Contains all Api and app parameters
  */
 class AppConfig {
+    AUTH_CACHE_KEY = 'auth_token';
     constructor() {
+        this.cache = new Cache();
         this._signer = null;
         this._baseurl = 'https://graph.microsoft.com/v1.0';
         this._oauth2 = new ClientOAuth2({
@@ -25,7 +94,7 @@ class AppConfig {
     }
 
     _authenticate() {
-        window.localStorage.removeItem('key');
+        this.cache.clear();
         let url = this._oauth2.token.getUri();
         console.debug(`no authentication... redirecting to ${url}`);
         // redirect to authenticate
@@ -40,7 +109,7 @@ class AppConfig {
         }
 
         // check localStore
-        let keyStorage = window.localStorage.getItem('key');
+        let keyStorage = this.cache.get(this.AUTH_CACHE_KEY);
         if (keyStorage) {
             this._setup({accessToken: keyStorage});
             callback(true);
@@ -53,7 +122,7 @@ class AppConfig {
         };
         const success = (signer) => {
             console.debug('authenticated', signer);
-            window.localStorage.setItem('key', signer.accessToken);
+            this.cache.set(this.AUTH_CACHE_KEY, signer.accessToken);
             this._setup(signer);
             callback(true);
         };
@@ -75,10 +144,11 @@ class AppConfig {
         );
     }
 
-    get(url, json=true) {
+    _request(method, url, body, json) {
         let response = request({
-            method: 'GET',
+            method: method,
             url: this._baseurl + url,
+            body: body,
             headers: {'Authorization': 'Bearer ' + this._signer.accessToken}
         });
 
@@ -97,76 +167,110 @@ class AppConfig {
         });
     }
 
-    getAlbums() {
-        return this.get('/me/drive/root:/Photos:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
-            (json) => {
-                const folders = json.body.children;
-                console.debug('folders=', folders);
-                // TODO pending support pagination with @odata.nextLink parameter
-                return folders.map((element) => {
-                    const albumId = element.id;
-                    const albumName = element.name;
-                    let coverPhoto = null;
-                    if (element.thumbnails && element.thumbnails.length > 0) {
-                        coverPhoto = new Photo(`thumb-${albumId}`, null, element.thumbnails[0]['large'].url, null);
-                    }
-                    return new Album(albumId, albumName, coverPhoto);
-                });
-            },
-            (err) => err);
+    get(url, json=true) {
+        return this._request('GET', url, null, json);
     }
 
-    _getComments(directoryListing) {
-        return new Promise((resolve) => {
-            for (let element of directoryListing) {
-                if (element.name == 'comments.json') {
-                    // returns a promise with comments file content
-                    const contentPromise = this.get(`/me/drive/items/${element.id}/content`).then((content) => {
-                        console.info('content', content.body);
-                        return content.body;
-                    });
-                    resolve(contentPromise);
-                    return;
+    put(url, body, json=true) {
+        return this._request('PUT', url, body, json);
+    }
+
+    async getAlbums() {
+        return this.cache.asyncGetOrSet('albums', () => {
+            // TODO pending support pagination with @odata.nextLink parameter
+            return this.get('/me/drive/root:/Photos:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
+                (json) => {
+                    const folders = json.body.children;
+                    console.debug('folders=', folders);
+                    return folders;
                 }
-            }
-            // not found returns empty element
-            console.info('Comments not found');
-            resolve({});
+            );
+        }).then((folders) => {
+            return folders.map((element) => {
+                const albumId = element.id;
+                const albumName = element.name;
+                let coverPhoto = null;
+                if (element.thumbnails && element.thumbnails.length > 0) {
+                    coverPhoto = new Photo(`thumb-${albumId}`, null, element.thumbnails[0]['large'].url, null);
+                }
+                return new Album(albumId, albumName, coverPhoto);
+            });
         });
     }
 
-    getPhotos(albumId) {
+    async _getDirectoryListing(albumId) {
+        return this.cache.asyncGetOrSet(`album-${albumId}`, 
+            () => this.get(`/me/drive/items/${albumId}/children?expand=thumbnails`).then(
+                (json) => {
+                    const directoryListing = json.body.value;
+                    // TODO pending support pagination with @odata.nextLink parameter
+                    return directoryListing;
+                }
+            )
+        );
+    }
+
+    async _getComments(albumId, _directoryListing=null) {
+        return (_directoryListing ? Promise.resolve(_directoryListing) : this._getDirectoryListing(albumId)).then(
+            (directoryListing) => {
+                const element = directoryListing.find((e) => e.name == 'comments.json');
+                if (element) {
+                    return this.get(`/me/drive/items/${element.id}/content`).then((content) => {
+                        return content.body || {};
+                    });
+                }
+                return {};
+            }
+        );
+    }
+
+    async updatePhoto(photo, comment) {
+        // get all comments and update only the required
+        return this._getDirectoryListing(photo.albumId).then(
+            (directoryListing) => {
+                const element = directoryListing.find((e) => e.name == 'comments.json');
+                let uploadUrl = null;
+                if (element) {
+                    uploadUrl = `/me/drive/items/${element.id}/content`;
+                } else {
+                    uploadUrl = `/me/drive/items/${photo.albumId}:/comments.json:/content`;
+                }
+                return uploadUrl;
+            }
+        ).then((uploadUrl) => {
+            return this._getComments(photo.albumId).then(
+                (comments) => {
+                    comments[photo.id] = comment;
+                    console.info('uploadurl=', uploadUrl);
+                    this.put(uploadUrl, JSON.stringify(comments)).then(() => {
+                        console.info('comments atualizado=', comments);
+                    });
+            });
+        });
+    }
+
+    async getPhotos(albumId) {
         // E4876DE43FA0DA3!3645
         // /me/drive/items/${albumId}/children?expand=thumbnails,children(expand=thumbnails(select=large))
-        return this.get(`/me/drive/items/${albumId}/children?expand=thumbnails`).then(
-            (json) => {
-                console.info('json=', json);
-                const directoryListing = json.body.value;
-                // TODO pending support pagination with @odata.nextLink parameter
-                return directoryListing;
-            }).then((directoryListing) => {
-                return new Promise((resolve, reject) => {
-                    this._getComments(directoryListing).then((comments) => {
-                        console.log("comments=", comments);
-                        resolve({
-                            directoryListing: directoryListing,
-                            comments: comments
-                        });
-                    }).catch((err) => reject(err));
-                });
-            }).then(({directoryListing, comments}) => {
-                // filtering photos
-                return directoryListing.filter((e) => e['photo']).map((element) => {
-                    const photoId = element.id;
-                    const photoName = element.description;
-                    let photoImg = null;
-                    if (element.thumbnails && element.thumbnails.length > 0) {
-                        photoImg = element.thumbnails[0]['large'].url;
-                    }
-                    console.debug('photo=', element.name, 'comments', comments[element.name]);
-                    return new Photo(photoId, photoName, photoImg, comments[element.name]);
-                });
+        return this._getDirectoryListing(albumId).then((directoryListing) => {
+            return this._getComments(albumId, directoryListing).then((comments) => {
+                return {
+                    directoryListing: directoryListing,
+                    comments: comments
+                };
             });
+        }).then(({directoryListing, comments}) => {
+            // filtering photos
+            return directoryListing.filter((e) => e['photo']).map((element) => {
+                const photoId = element.name;
+                const photoName = element.description;
+                let photoImg = null;
+                if (element.thumbnails && element.thumbnails.length > 0) {
+                    photoImg = element.thumbnails[0]['large'].url;
+                }
+                return new Photo(albumId, photoId, photoName, photoImg, comments[photoId]);
+            });
+        });
     }
 }
 

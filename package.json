@@ -17,6 +17,7 @@
     "react-router-dom": "^4.3.1",
     "react-spinners": "^0.4.5",
     "reactstrap": "^6.4.0",
+    "riek": "^1.1.0",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.2"
   },

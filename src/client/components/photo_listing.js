@@ -4,8 +4,16 @@ import apiConfig from './app_config';
 import { Photo } from '../api/model';
 import PropTypes from 'prop-types';
 import '../App.css';
+import EditableText from './editable_text';
 
 class PhotoView extends Component {
+
+    updateCommentFunc() {
+        return (value) => {
+            console.info('this===', this);
+            return apiConfig.updatePhoto(this.props.photo, value);
+        };
+    }
 
     render() {
         return (
@@ -13,7 +21,7 @@ class PhotoView extends Component {
                 <figure className="figure photo">
                     <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
                     <figcaption className="figure-caption">{this.props.photo.name}</figcaption>
-                    {this.props.photo.comment ? <p>{this.props.photo.comment}</p> : null}
+                    <EditableText text={this.props.photo.comment} updateFunc={this.updateCommentFunc()} />
                 </figure>
             </div>
         );

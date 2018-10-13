@@ -15,7 +15,8 @@ class Album {
 }
 
 class Photo {
-    constructor(id, name, image, comment) {
+    constructor(albumId, id, name, image, comment) {
+        this.albumId = albumId;
         this.id = id;
         this.name = name;
         this.image = image;
