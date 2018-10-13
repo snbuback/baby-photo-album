@@ -10,11 +10,19 @@ class PhotoView extends Component {
     constructor(props) {
         super(props);
         this.updateComment = this.updateComment.bind(this);
+        this.updateTitle = this.updateTitle.bind(this);
     }
 
     updateComment(value) {
-        return apiConfig.updatePhoto(this.props.photo, value).then(() => {
+        return apiConfig.updatePhotoComment(this.props.photo, value).then(() => {
             this.props.photo.comment = value;
+            this.setState({});
+        });
+    }
+
+    updateTitle(value) {
+        return apiConfig.updatePhotoTitle(this.props.photo, value).then(() => {
+            this.props.photo.title = value;
             this.setState({});
         });
     }
@@ -24,8 +32,12 @@ class PhotoView extends Component {
             <div>
                 <figure className="figure photo">
                     <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
-                    <figcaption className="figure-caption">{this.props.photo.name}</figcaption>
-                    <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
+                    <figcaption className="figure-caption">
+                        <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
+                    </figcaption>
+                    <p>
+                        <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
+                    </p>
                 </figure>
             </div>
         );

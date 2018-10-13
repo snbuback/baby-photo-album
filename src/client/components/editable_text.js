@@ -9,7 +9,7 @@ class EditableText extends Component {
     }
 
     get cssClasses() {
-        return `editable ${this.props.text ? "editable-filled" : "editable-not-filled"}`;
+        return `editable ${this.props.text ? "editable-filled" : "editable-not-filled"} ${this.props.className}`;
     }
 
     get text() {
@@ -34,7 +34,8 @@ EditableText.defaultProps = {
 EditableText.propTypes = {
     text: PropTypes.string,
     invitation: PropTypes.string.isRequired,
-    updateFunc: PropTypes.func.isRequired
+    updateFunc: PropTypes.func.isRequired,
+    className: PropTypes.string
 };
 
 export default EditableText;

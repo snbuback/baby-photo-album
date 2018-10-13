@@ -15,16 +15,16 @@ class Album {
 }
 
 class Photo {
-    constructor(albumId, id, name, image, comment) {
+    constructor(albumId, id, title, image, comment) {
         this.albumId = albumId;
         this.id = id;
-        this.name = name;
+        this.title = title;
         this.image = image;
         this.comment = comment;
     }
 
     toString() {
-        return `Photo ${this.name}: ${this.image}`;
+        return `Photo ${this.title}: ${this.image}`;
     }
 }
 

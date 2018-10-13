@@ -175,6 +175,10 @@ class AppConfig {
         return this._request('PUT', url, body, json);
     }
 
+    patch(url, body, json=true) {
+        return this._request('PATCH', url, body, json);
+    }
+
     async getAlbums() {
         return this.cache.asyncGetOrSet('albums', () => {
             // TODO pending support pagination with @odata.nextLink parameter
@@ -223,8 +227,23 @@ class AppConfig {
             }
         );
     }
+    async updatePhotoTitle(photo, title) {
+        return this._getDirectoryListing(photo.albumId).then(
+            (directoryListing) => {
+                const element = directoryListing.find((e) => e.name == photo.id);
+                if (!element) {
+                    throw `Invalid photo reference: ${photo.id}`;
+                }
+                return element;
+            }
+        ).then(
+            (element) => {
+                return this.patch(`/me/drive/items/${element.id}`, {description: title}, true);
+            }
+        ).finally(() => this.cache.del(`album-${photo.albumId}`));
+    }
 
-    async updatePhoto(photo, comment) {
+    async updatePhotoComment(photo, comment) {
         // get all comments and update only the required
         return this._getDirectoryListing(photo.albumId).then(
             (directoryListing) => {
@@ -241,9 +260,7 @@ class AppConfig {
             return this._getComments(photo.albumId).then(
                 (comments) => {
                     comments[photo.id] = comment;
-                    console.info('uploadurl=', uploadUrl);
                     this.put(uploadUrl, JSON.stringify(comments)).then(() => {
-                        console.info('comments atualizado=', comments);
                     });
             });
         });
@@ -263,12 +280,12 @@ class AppConfig {
             // filtering photos
             return directoryListing.filter((e) => e['photo']).map((element) => {
                 const photoId = element.name;
-                const photoName = element.description;
+                const photoTitle = element.description;
                 let photoImg = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
                     photoImg = element.thumbnails[0]['large'].url;
                 }
-                return new Photo(albumId, photoId, photoName, photoImg, comments[photoId]);
+                return new Photo(albumId, photoId, photoTitle, photoImg, comments[photoId]);
             });
         });
     }
