@@ -22,7 +22,7 @@ class AlbumCover extends Component {
     }
 
     getClassName() {
-        return `p-2 border d-flex album album-size-${this.props.index % 3 + 1}`;
+        return `p-2 border d-flex album album-size-${(this.props.index+1) % 3 + 1}`;
     }
 
     get albumLink() {

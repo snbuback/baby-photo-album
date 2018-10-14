@@ -190,12 +190,16 @@ class AppConfig {
                 }
             );
         }).then((folders) => {
-            return folders.map((element) => {
+            return folders.filter((element) => element.name.search(/baby/i) !== -1).map((element) => {
                 const albumId = element.id;
                 const albumName = element.name;
                 let coverPhoto = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
-                    coverPhoto = new Photo(`thumb-${albumId}`, null, element.thumbnails[0]['large'].url, null);
+                    coverPhoto = new Photo({
+                        albumId: albumId,
+                        id: `thumb-${albumId}`,
+                        image: element.thumbnails[0]['large'].url
+                    });
                 }
                 return new Album(albumId, albumName, coverPhoto);
             });
@@ -267,8 +271,6 @@ class AppConfig {
     }
 
     async getPhotos(albumId) {
-        // E4876DE43FA0DA3!3645
-        // /me/drive/items/${albumId}/children?expand=thumbnails,children(expand=thumbnails(select=large))
         return this._getDirectoryListing(albumId).then((directoryListing) => {
             return this._getComments(albumId, directoryListing).then((comments) => {
                 return {
@@ -277,16 +279,34 @@ class AppConfig {
                 };
             });
         }).then(({directoryListing, comments}) => {
+            console.log('directoryListing', directoryListing);
             // filtering photos
             return directoryListing.filter((e) => e['photo']).map((element) => {
                 const photoId = element.name;
                 const photoTitle = element.description;
+                const height = element.image && element.image.height;
+                const width = element.image && element.image.width;
+                const taken = (element.photo && element.photo.takenDateTime) || element.createdDateTime;
                 let photoImg = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
                     photoImg = element.thumbnails[0]['large'].url;
                 }
-                return new Photo(albumId, photoId, photoTitle, photoImg, comments[photoId]);
+                return new Photo({
+                    albumId: albumId,
+                    id: photoId,
+                    title: photoTitle,
+                    image: photoImg,
+                    height: height,
+                    width: width,
+                    taken: taken ? new Date(taken) : null,
+                    comment: comments[photoId]
+                });
             });
+        }).then((photos) => {
+            // sort by date
+            photos.sort((photoA, photoB) => (photoB.taken || 0) - (photoA.taken || 0));
+            console.debug(`Photos from ${albumId}`, photos);
+            return photos;
         });
     }
 }

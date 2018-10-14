@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col } from 'reactstrap';
+import { Row, Col, Container } from 'reactstrap';
 import apiConfig from './app_config';
 import { Photo } from '../api/model';
 import PropTypes from 'prop-types';
@@ -27,19 +27,28 @@ class PhotoView extends Component {
         });
     }
 
+    get dateTaken() {
+        const date = this.props.photo.taken;
+        return date ? `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}` : null;
+    }
+
     render() {
         return (
-            <div>
-                <figure className="figure photo">
-                    <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
-                    <figcaption className="figure-caption">
-                        <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
-                    </figcaption>
-                    <p>
-                        <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
-                    </p>
-                </figure>
-            </div>
+            <Col xs='3'>
+                <div className='card photo'>
+                    <figure className="figure ">
+                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
+                        <figcaption className="figure-caption">
+                            <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
+                        </figcaption>
+                        <p>
+                            <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
+                        </p>
+                        <small>{this.dateTaken}</small>
+                        
+                    </figure>
+                </div>
+            </Col>
         );
     }
 }
@@ -63,12 +72,14 @@ class PhotoListing extends Component {
     render() {
         return (
             <Row>
-                <Col>
-                    <div className="">
-                        {this.state.photos.map((photo) =>
-                            <PhotoView key={photo.id} photo={photo} />
-                        )}
-                    </div>
+                <Col xs="12">
+                    <Container fluid className='container-column'>
+                        <Row className='flex-row flex-nowrap'>
+                            {this.state.photos.map((photo) =>
+                                <PhotoView key={photo.id} photo={photo} />
+                            )}
+                        </Row>
+                    </Container>
                 </Col>
             </Row>
         );

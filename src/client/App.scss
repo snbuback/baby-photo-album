@@ -1,5 +1,6 @@
 @import "bootstrap/scss/bootstrap.scss";
 
+$background-gradient: 0.5;
 html {
   font-size: 16px;
 }
@@ -9,6 +10,9 @@ body {
   color: #212224;
   text-rendering: optimizelegibility;
   padding-top: 2rem;
+  background: linear-gradient(rgba(255, 255, 255, $background-gradient), rgba(255, 255, 255, $background-gradient)), url('/public/background.png');
+  background-size: 20%;
+  background-repeat: repeat;
 }
 
 .loading {
@@ -47,6 +51,10 @@ h2 {
   color: white;
   font-size: 2rem;
   z-index: 1;
+
+  a {
+    color: white;
+  }
 }
 
 .album-cover {
@@ -58,9 +66,13 @@ h2 {
   position: absolute;
 }
 
-.photo {
+.photo img {
   width: 400px;
   height: 300px;
+}
+
+.container-column {
+  overflow-x: scroll;
 }
 
 .editable-not-filled {
