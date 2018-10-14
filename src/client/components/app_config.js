@@ -309,7 +309,7 @@ class AppConfig {
             });
         }).then((photos) => {
             // sort by date
-            photos.sort((photoA, photoB) => (photoB.taken || 0) - (photoA.taken || 0));
+            photos.sort((photoA, photoB) => (photoA.taken || 0) - (photoB.taken || 0));
             console.debug(`Photos from ${albumId}`, photos);
             return photos;
         });

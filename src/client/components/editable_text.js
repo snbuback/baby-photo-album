@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { RIEInput } from 'riek';
+import { RIEInput, RIETextArea } from 'riek';
 
 class EditableText extends Component {
     constructor(props) {
@@ -21,19 +21,21 @@ class EditableText extends Component {
     }
 
     render() {
-        return (
-            <RIEInput value={this.text} propName='text' change={this.handleUpdate} className={this.cssClasses} />
-        );
+        return this.props.long ? 
+            <RIETextArea value={this.text} propName='text' change={this.handleUpdate} className={this.cssClasses} /> :
+            <RIEInput value={this.text} propName='text' change={this.handleUpdate} className={this.cssClasses} />;
     }
 }
 
 EditableText.defaultProps = {
-    invitation: "Express yourself!"
+    invitation: "Express yourself!",
+    long: false
 };
 
 EditableText.propTypes = {
     text: PropTypes.string,
     invitation: PropTypes.string.isRequired,
+    long: PropTypes.bool.isRequired,
     updateFunc: PropTypes.func.isRequired,
     className: PropTypes.string
 };

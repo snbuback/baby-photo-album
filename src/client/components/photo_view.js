@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, Container } from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 import PropTypes from 'prop-types';
 import EditableText from './editable_text';
 import apiConfig from './app_config';
@@ -32,20 +32,30 @@ class PhotoView extends Component {
         return date ? `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}` : null;
     }
 
+    get styleSize() {
+        const height = 400;
+        const width = height / this.props.photo.height * this.props.photo.width;
+        return {
+            height: `${height}px`,
+            width: `${width}px`
+        };
+    }
+
     render() {
         return (
             <Col>
-                <div className='card photo'>
-                    <figure className="figure ">
-                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />
-                        <figcaption className="figure-caption">
-                            <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
-                        </figcaption>
-                        <p>
-                            <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} />
+                <div className='card'>
+                    <figure className="figure">
+                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={this.styleSize} />
+                        <div className='d-flex'>
+                            <figcaption className='p-2 flex-grow-1 figure-caption'>
+                                <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
+                            </figcaption>
+                            <p className='p-2 date-taken'>{this.dateTaken}</p>
+                        </div>
+                        <p className='figure-comment'>
+                            <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} invitation='' long />
                         </p>
-                        <small>{this.dateTaken}</small>
-                        
                     </figure>
                 </div>
             </Col>
@@ -71,16 +81,10 @@ class PhotoListView extends Component {
 
     render() {
         return (
-            <Row>
-                <Col xs="12">
-                    <Container fluid className='container-column'>
-                        <Row className='flex-row flex-nowrap'>
-                            {this.state.photos.map((photo) =>
-                                <PhotoView key={photo.id} photo={photo} />
-                            )}
-                        </Row>
-                    </Container>
-                </Col>
+            <Row className='row-photos'>
+                {this.state.photos.map((photo) =>
+                    <PhotoView key={photo.id} photo={photo} />
+                )}
             </Row>
         );
     }

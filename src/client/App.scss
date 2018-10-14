@@ -86,15 +86,59 @@ body {
   }
 }
 
-.photo img {
-  width: auto;
-  height: $album-height;
-}
-
-.container-column {
+// photo view
+.row-photos {
+  @extend .flex-row;
+  @extend .flex-nowrap;
   overflow-x: scroll;
+
+  .card {
+    background: transparent;
+    border: 0px;
+  }
+
+  .figure-img {
+    border-radius: 25px;
+  }
+
+  .figure-caption, .figure-comment, .date-taken {
+    // margin-left: 1rem;
+    // margin-right: 1rem;
+  }
+
+  .figure-caption {
+    color: black;
+    font-size: 1.2rem;
+  }
+
+  .figure-comment {
+    padding-top: 1rem;
+    color: gray;
+    min-width: 10rem;
+
+    > span {
+      display: block;
+      width: 100%;
+      min-height: 2rem;
+    }
+
+    > span:empty:hover::after {
+      content: 'click to add a comment';
+    }
+
+  }
+
+  .date-taken {
+    color: gray;
+    font-size: 1rem;
+  }
 }
 
+
+
+.editable {
+  width: 100%;
+}
 .editable-not-filled {
   color: gray;
 }
