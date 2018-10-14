@@ -101,14 +101,10 @@ body {
     border-radius: 25px;
   }
 
-  .figure-caption, .figure-comment, .date-taken {
-    // margin-left: 1rem;
-    // margin-right: 1rem;
-  }
-
   .figure-caption {
     color: black;
-    font-size: 1.2rem;
+    font-size: 2.5rem;
+    font-family: 'Sacramento', cursive;
   }
 
   .figure-comment {
@@ -116,17 +112,16 @@ body {
     color: gray;
     min-width: 10rem;
 
-    > span {
+    .editable {
       display: block;
       width: 100%;
       min-height: 2rem;
     }
 
-    > span:empty:hover::after {
+    .editable-not-filled:hover:after {
       content: 'click to add a comment';
     }
-
-  }
+}
 
   .date-taken {
     color: gray;

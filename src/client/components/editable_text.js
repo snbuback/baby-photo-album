@@ -29,7 +29,8 @@ class EditableText extends Component {
 
 EditableText.defaultProps = {
     invitation: "Express yourself!",
-    long: false
+    long: false,
+    className: ''
 };
 
 EditableText.propTypes = {
