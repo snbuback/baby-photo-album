@@ -21,10 +21,10 @@ class App extends Component {
     renderGranted() {
         return (
             <Container fluid>
-                <Row>
+                <Row className='row-title'>
                     <Col>
-                        <h1 className="display-3">Photo Album</h1>
-                        <h2>The story of a little baby!</h2>
+                        <h1 className='title'>Photo Album</h1>
+                        <h2 className='sub-title'>The story of a little baby!</h2>
                     </Col>
                 </Row>
                 <Route exact path="/" component={AlbumList} />

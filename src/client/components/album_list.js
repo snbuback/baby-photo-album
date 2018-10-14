@@ -16,15 +16,11 @@ class AlbumList extends Component {
 
     render() {
       return (
-        <Row>
-          <Col>
-            <div className="d-flex flex-row flex-wrap">
-                {this.state.albums.map((album, index) => 
-                    <AlbumCover key={album.id} album={album} index={index} />
-                )}
-            </div>
-          </Col>
-        </Row>
+        <div className="album-list">
+            {this.state.albums.map((album, index) => 
+                <AlbumCover key={album.id} album={album} index={index} />
+            )}
+        </div>
       );
     }
   }

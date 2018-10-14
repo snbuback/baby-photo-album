@@ -22,7 +22,7 @@ class AlbumCover extends Component {
     }
 
     getClassName() {
-        return `p-2 border d-flex album album-size-${(this.props.index+1) % 3 + 1}`;
+        return `album-cover album-size-${(this.props.index+1) % 3 + 1}`;
     }
 
     get albumLink() {
@@ -33,7 +33,7 @@ class AlbumCover extends Component {
         return (
             <div className={this.getClassName()}>
                 <h3 className='album-title'><Link to={this.albumLink}>{this.props.album.name}</Link></h3>
-                <div className='album-cover' style={this.albumStyle}></div>
+                <div className='album-photo' style={this.albumStyle}></div>
             </div>
         );
     }

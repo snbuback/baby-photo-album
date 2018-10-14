@@ -34,7 +34,7 @@ class PhotoView extends Component {
 
     render() {
         return (
-            <Col xs='3'>
+            <Col>
                 <div className='card photo'>
                     <figure className="figure ">
                         <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img img-fluid rounded" alt={this.props.photo.name} />

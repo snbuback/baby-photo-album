@@ -219,18 +219,20 @@ class AppConfig {
     }
 
     async _getComments(albumId, _directoryListing=null) {
-        return (_directoryListing ? Promise.resolve(_directoryListing) : this._getDirectoryListing(albumId)).then(
-            (directoryListing) => {
-                const element = directoryListing.find((e) => e.name == 'comments.json');
-                if (element) {
-                    return this.get(`/me/drive/items/${element.id}/content`).then((content) => {
-                        return content.body || {};
-                    });
+        return this.cache.asyncGetOrSet(`comments-${albumId}`, 
+        () => (_directoryListing ? Promise.resolve(_directoryListing) : this._getDirectoryListing(albumId)).then(
+                (directoryListing) => {
+                    const element = directoryListing.find((e) => e.name == 'comments.json');
+                    if (element) {
+                        return this.get(`/me/drive/items/${element.id}/content`).then((content) => {
+                            return content.body || {};
+                        });
+                    }
+                    return {};
                 }
-                return {};
-            }
-        );
+        ));
     }
+
     async updatePhotoTitle(photo, title) {
         return this._getDirectoryListing(photo.albumId).then(
             (directoryListing) => {
@@ -248,23 +250,26 @@ class AppConfig {
     }
 
     async updatePhotoComment(photo, comment) {
+        const albumId = photo.albumId;
         // get all comments and update only the required
-        return this._getDirectoryListing(photo.albumId).then(
+        return this._getDirectoryListing(albumId).then(
             (directoryListing) => {
                 const element = directoryListing.find((e) => e.name == 'comments.json');
                 let uploadUrl = null;
                 if (element) {
                     uploadUrl = `/me/drive/items/${element.id}/content`;
                 } else {
-                    uploadUrl = `/me/drive/items/${photo.albumId}:/comments.json:/content`;
+                    uploadUrl = `/me/drive/items/${albumId}:/comments.json:/content`;
                 }
                 return uploadUrl;
             }
         ).then((uploadUrl) => {
-            return this._getComments(photo.albumId).then(
+            return this._getComments(albumId).then(
                 (comments) => {
                     comments[photo.id] = comment;
                     this.put(uploadUrl, JSON.stringify(comments)).then(() => {
+                        // update cache
+                        this.cache.set(`comments-${albumId}`, comments);
                     });
             });
         });
