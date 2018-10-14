@@ -26,3 +26,5 @@ src/**/*.css
 # Container wrappers
 .wrappers
 
+dist
+

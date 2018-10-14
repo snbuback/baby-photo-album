@@ -84,7 +84,7 @@ class AppConfig {
             // clientSecret: '123',
             // accessTokenUri: 'https://github.com/login/oauth/access_token',
             authorizationUri: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-            redirectUri: 'http://localhost:3000/',
+            redirectUri: window.location.origin + '/',
             scopes: ['user.read', 'files.read', 'files.read.all', 'sites.read.all', 'sites.readwrite.all', 'files.readwrite.all']
         });
     }
