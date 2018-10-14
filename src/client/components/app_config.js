@@ -291,7 +291,7 @@ class AppConfig {
                 const photoTitle = element.description;
                 const height = element.image && element.image.height;
                 const width = element.image && element.image.width;
-                const taken = (element.photo && element.photo.takenDateTime) || element.createdDateTime;
+                const taken = (element.photo && element.photo.takenDateTime) || element.fileSystemInfo.createdDateTime || element.createdDateTime;
                 let photoImg = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
                     photoImg = element.thumbnails[0]['large'].url;

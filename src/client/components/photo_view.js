@@ -7,6 +7,8 @@ import { Photo } from '../api/model';
 import '../App.css';
 
 class PhotoView extends Component {
+    height = 400;
+
     constructor(props) {
         super(props);
         this.updateComment = this.updateComment.bind(this);
@@ -29,30 +31,24 @@ class PhotoView extends Component {
 
     get dateTaken() {
         const date = this.props.photo.taken;
-        return date ? `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}` : null;
+        return date ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` : null;
     }
 
-    get styleSize() {
-        const height = 400;
-        const width = height / this.props.photo.height * this.props.photo.width;
-        return {
-            height: `${height}px`,
-            width: `${width}px`
-        };
+    get width() {
+        return Math.max(this.props.photo.height && this.props.photo.width ? (this.height / this.props.photo.height * this.props.photo.width) : 0,
+        400);
     }
 
     render() {
         return (
             <Col>
-                <div className='card'>
+                <div className='card xx' style={{width: `${this.width}px`}}>
                     <figure className="figure">
-                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={this.styleSize} />
-                        <div className='d-flex'>
-                            <figcaption className='p-2 flex-grow-1 figure-caption'>
-                                <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
-                            </figcaption>
-                            <p className='p-2 date-taken'>{this.dateTaken}</p>
-                        </div>
+                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={{height: `${this.height}px`}} />
+                        <figcaption className='figure-caption'>
+                            <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
+                        </figcaption>
+                        <p className='date-taken'>{this.dateTaken}</p>
                         <p className='figure-comment'>
                             <EditableText text={this.props.photo.comment} updateFunc={this.updateComment} invitation='' long />
                         </p>
