@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Row, Col, Container } from 'reactstrap';
+import PropTypes from 'prop-types';
+import EditableText from './editable_text';
 import apiConfig from './app_config';
 import { Photo } from '../api/model';
-import PropTypes from 'prop-types';
 import '../App.css';
-import EditableText from './editable_text';
 
 class PhotoView extends Component {
     constructor(props) {
@@ -58,7 +58,7 @@ PhotoView.propTypes = {
     // index: PropTypes.number.isRequired
 };
 
-class PhotoListing extends Component {
+class PhotoListView extends Component {
     constructor(props) {
         super(props);
         this.state = { photos: [] };
@@ -86,8 +86,9 @@ class PhotoListing extends Component {
     }
 }
 
-PhotoListing.propTypes = {
+PhotoListView.propTypes = {
     match: PropTypes.object.isRequired
 };
 
-export default PhotoListing;
+export default PhotoListView;
+export {PhotoListView, PhotoView};

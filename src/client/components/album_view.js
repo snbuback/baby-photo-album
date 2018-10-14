@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
-// import { Row, Col } from 'reactstrap';
-import '../App.css';
+import apiConfig from './app_config';
 import { Album } from '../api/model';
+import '../App.css';
 
-class AlbumCover extends Component {
+
+class AlbumView extends Component {
     static propTypes = {
         album: PropTypes.instanceOf(Album).isRequired,
         index: PropTypes.number.isRequired
@@ -39,4 +40,26 @@ class AlbumCover extends Component {
     }
 }
 
-export default AlbumCover;
+class AlbumListView extends Component {
+    constructor(props) {
+        super(props);
+        this.state = { albums: [] };
+    }
+
+    componentDidMount() {
+        apiConfig.getAlbums().then((albums) => this.setState({albums: albums}));
+    }
+
+    render() {
+      return (
+        <div className="album-list">
+            {this.state.albums.map((album, index) => 
+                <AlbumView key={album.id} album={album} index={index} />
+            )}
+        </div>
+      );
+    }
+  }
+
+export default AlbumListView;
+export {AlbumListView, AlbumView};
