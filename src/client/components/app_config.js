@@ -185,14 +185,14 @@ class AppConfig {
             return this.get('/me/drive/root:/Photos/Baby:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
                 (json) => {
                     const folders = json.body.children;
-                    console.debug('folders=', folders);
                     return folders;
                 }
             );
         }).then((folders) => {
+            folders = folders.sort((folderA, folderB) => (folderA.name.localeCompare(folderB.name)));
             return folders.map((element) => {
                 const albumId = element.id;
-                const albumName = element.name;
+                const albumName = element.description || element.name;
                 let coverPhoto = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
                     coverPhoto = new Photo({

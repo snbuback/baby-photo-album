@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import EditableText from './editable_text';
 import apiConfig from './app_config';
 import { Photo } from '../api/model';
+import Promise from 'promise';
 import '../App.css';
 
 class PhotoView extends Component {
@@ -42,7 +43,7 @@ class PhotoView extends Component {
     render() {
         return (
             <Col>
-                <div className='card xx' style={{width: `${this.width}px`}}>
+                <div className='card' style={{width: `${this.width}px`}}>
                     <figure className="figure">
                         <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={{height: `${this.height}px`}} />
                         <figcaption className='figure-caption'>
@@ -67,21 +68,34 @@ PhotoView.propTypes = {
 class PhotoListView extends Component {
     constructor(props) {
         super(props);
-        this.state = { photos: [] };
+        this.state = { photos: [], album: {} };
     }
 
     componentDidMount() {
         console.info(`Requesting photo of path: "${this.props.match.params.albumId}"`);
-        apiConfig.getPhotos(this.props.match.params.albumId).then((photos) => this.setState({ photos: photos }));
+        Promise.all([
+            // album
+            apiConfig.getAlbums().then((albums) => albums.find((album) => album.id === this.props.match.params.albumId)),
+            // photos
+            apiConfig.getPhotos(this.props.match.params.albumId),
+        ]).then((result) => {
+            let album = result[0];
+            let photos = result[1];
+            console.info('parameters', { photos: photos, album: album });
+            this.setState({ photos: photos, album: album });
+        });
     }
 
     render() {
         return (
-            <Row className='row-photos'>
-                {this.state.photos.map((photo) =>
-                    <PhotoView key={photo.id} photo={photo} />
-                )}
-            </Row>
+            <div>
+                <h3>{this.state.album.name}</h3>
+                <Row className='row-photos'>
+                    {this.state.photos.map((photo) =>
+                        <PhotoView key={photo.id} photo={photo} />
+                    )}
+                </Row>
+            </div>
         );
     }
 }
