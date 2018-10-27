@@ -182,7 +182,7 @@ class AppConfig {
     async getAlbums() {
         return this.cache.asyncGetOrSet('albums', () => {
             // TODO pending support pagination with @odata.nextLink parameter
-            return this.get('/me/drive/root:/Photos:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
+            return this.get('/me/drive/root:/Photos/Baby:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
                 (json) => {
                     const folders = json.body.children;
                     console.debug('folders=', folders);
@@ -190,7 +190,7 @@ class AppConfig {
                 }
             );
         }).then((folders) => {
-            return folders.filter((element) => element.name.search(/baby/i) !== -1).map((element) => {
+            return folders.map((element) => {
                 const albumId = element.id;
                 const albumName = element.name;
                 let coverPhoto = null;

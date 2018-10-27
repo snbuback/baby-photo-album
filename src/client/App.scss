@@ -27,13 +27,15 @@ body {
     .title {
         @extend .display-3;
         text-align: center;
-        color: #df8dbd;
+        color: #2a83cc;
+        font-family: "Mountains of Christmas", cursive;
     }
     .sub-title {
         @extend .align-items-center;
-        font-family: "Sacramento",cursive;
+        font-family: "Sacramento", cursive;
         text-align: center;
-        color: #df8dbd;
+        color: #2a83cc;
+        font-size: 2.5rem;
 
     }
 }
@@ -91,8 +93,8 @@ body {
     }
     .figure-caption {
         color: black;
-        font-size: 2.5rem;
-        font-family: "Sacramento",cursive;
+        font-size: 2.0rem;
+        font-family: "Mountains of Christmas", cursive;
         line-height: 2rem;
         padding-bottom: 1rem;
         padding-top: 1rem;
