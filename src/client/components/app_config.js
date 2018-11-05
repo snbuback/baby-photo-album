@@ -147,7 +147,7 @@ class AppConfig {
     _request(method, url, body, json) {
         let response = request({
             method: method,
-            url: this._baseurl + url,
+            url: this._baseurl + '/drives/e4876de43fa0da3' + url,
             body: body,
             headers: {'Authorization': 'Bearer ' + this._signer.accessToken}
         });
@@ -182,7 +182,7 @@ class AppConfig {
     async getAlbums() {
         return this.cache.asyncGetOrSet('albums', () => {
             // TODO pending support pagination with @odata.nextLink parameter
-            return this.get('/me/drive/root:/Photos/Baby:?expand=thumbnails,children(expand=thumbnails(select=large))').then(
+            return this.get('/items/E4876DE43FA0DA3!27069?expand=thumbnails,children(expand=thumbnails(select=large))').then(
                 (json) => {
                     const folders = json.body.children;
                     return folders;
@@ -208,7 +208,7 @@ class AppConfig {
 
     async _getDirectoryListing(albumId) {
         return this.cache.asyncGetOrSet(`album-${albumId}`, 
-            () => this.get(`/me/drive/items/${albumId}/children?expand=thumbnails`).then(
+            () => this.get(`/items/${albumId}/children?expand=thumbnails`).then(
                 (json) => {
                     const directoryListing = json.body.value;
                     // TODO pending support pagination with @odata.nextLink parameter
@@ -224,7 +224,7 @@ class AppConfig {
                 (directoryListing) => {
                     const element = directoryListing.find((e) => e.name == 'comments.json');
                     if (element) {
-                        return this.get(`/me/drive/items/${element.id}/content`).then((content) => {
+                        return this.get(`/items/${element.id}/content`).then((content) => {
                             return content.body || {};
                         });
                     }
@@ -244,7 +244,7 @@ class AppConfig {
             }
         ).then(
             (element) => {
-                return this.patch(`/me/drive/items/${element.id}`, {description: title}, true);
+                return this.patch(`/items/${element.id}`, {description: title}, true);
             }
         ).finally(() => this.cache.del(`album-${photo.albumId}`));
     }
@@ -257,9 +257,9 @@ class AppConfig {
                 const element = directoryListing.find((e) => e.name == 'comments.json');
                 let uploadUrl = null;
                 if (element) {
-                    uploadUrl = `/me/drive/items/${element.id}/content`;
+                    uploadUrl = `/items/${element.id}/content`;
                 } else {
-                    uploadUrl = `/me/drive/items/${albumId}:/comments.json:/content`;
+                    uploadUrl = `/items/${albumId}:/comments.json:/content`;
                 }
                 return uploadUrl;
             }

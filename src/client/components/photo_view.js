@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col } from 'reactstrap';
+import { Row, Col, Card, CardBody, CardImg, CardTitle, CardText } from 'reactstrap';
 import PropTypes from 'prop-types';
 import EditableText from './editable_text';
 import apiConfig from './app_config';
@@ -7,27 +7,68 @@ import { Photo } from '../api/model';
 import Promise from 'promise';
 import '../App.css';
 
-class PhotoView extends Component {
-    height = 400;
+
+function updateComment(value) {
+    return apiConfig.updatePhotoComment(this.props.photo, value).then(() => {
+        console.info('Chamado comment valor', value, this.props);
+        this.props.photo.comment = value;
+        this.setState({});
+    });
+}
+
+function updateTitle(value) {
+    return apiConfig.updatePhotoTitle(this.props.photo, value).then(() => {
+        console.info('Chamado com valor', value, this.props);
+        this.props.photo.title = value;
+        this.setState({});
+    });
+}
+
+class SimplePhotoCard extends Component {
+    base_width = 400;
 
     constructor(props) {
         super(props);
-        this.updateComment = this.updateComment.bind(this);
-        this.updateTitle = this.updateTitle.bind(this);
+        this.updateComment = updateComment.bind(this);
+        this.updateTitle = updateTitle.bind(this);
     }
 
-    updateComment(value) {
-        return apiConfig.updatePhotoComment(this.props.photo, value).then(() => {
-            this.props.photo.comment = value;
-            this.setState({});
-        });
+    get width() {
+        return this.base_width;
     }
 
-    updateTitle(value) {
-        return apiConfig.updatePhotoTitle(this.props.photo, value).then(() => {
-            this.props.photo.title = value;
-            this.setState({});
-        });
+    get height() {
+        const photoHeight = this.props.photo.height;
+        const photoWidth = this.props.photo.width;
+        let height = Math.max(photoHeight && photoWidth ? (this.base_width / photoWidth * photoHeight) : 0, this.base_width);
+        return height;
+    }
+
+    render() {
+        return (
+            <Card style={{width: `${this.width}px`}}>
+                <CardImg src={this.props.photo.image} height={this.height} />
+                <CardBody>
+                    <CardTitle><EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} /></CardTitle>
+                    <CardText><EditableText text={this.props.photo.comment} updateFunc={this.updateComment} invitation='---' long /></CardText>
+                </CardBody>
+            </Card>
+        );
+    }
+
+}
+
+SimplePhotoCard.propTypes = {
+    photo: PropTypes.instanceOf(Photo).isRequired
+};
+
+class PhotoView extends Component {
+    base_height = 400;
+
+    constructor(props) {
+        super(props);
+        this.updateComment = updateComment.bind(this);
+        this.updateTitle = updateTitle.bind(this);
     }
 
     get dateTaken() {
@@ -36,8 +77,13 @@ class PhotoView extends Component {
     }
 
     get width() {
-        return Math.max(this.props.photo.height && this.props.photo.width ? (this.height / this.props.photo.height * this.props.photo.width) : 0,
-        400);
+        const photoHeight = this.props.photo.height;
+        const photoWidth = this.props.photo.width;
+        return Math.max(photoHeight && photoWidth ? (this.base_height / photoHeight * photoWidth) : 0, this.base_height);
+    }
+
+    get height() {
+        return this.base_height;
     }
 
     render() {
@@ -72,7 +118,6 @@ class PhotoListView extends Component {
     }
 
     componentDidMount() {
-        console.info(`Requesting photo of path: "${this.props.match.params.albumId}"`);
         Promise.all([
             // album
             apiConfig.getAlbums().then((albums) => albums.find((album) => album.id === this.props.match.params.albumId)),
@@ -81,9 +126,12 @@ class PhotoListView extends Component {
         ]).then((result) => {
             let album = result[0];
             let photos = result[1];
-            console.info('parameters', { photos: photos, album: album });
             this.setState({ photos: photos, album: album });
         });
+    }
+
+    isStory(photo) {
+        return !!photo.comment;
     }
 
     render() {
@@ -91,9 +139,18 @@ class PhotoListView extends Component {
             <div>
                 <h3>{this.state.album.name}</h3>
                 <Row className='row-photos'>
-                    {this.state.photos.map((photo) =>
+                    {this.state.photos.filter((photo => this.isStory(photo))).map((photo) =>
                         <PhotoView key={photo.id} photo={photo} />
                     )}
+                </Row>
+                <hr/>
+                <h3>Veja toda a minha aventura</h3>
+                <Row>
+                    <div className="card-columns">
+                    {this.state.photos.map((photo) =>
+                        <SimplePhotoCard key={photo.id} photo={photo} />
+                    )}
+                    </div>
                 </Row>
             </div>
         );

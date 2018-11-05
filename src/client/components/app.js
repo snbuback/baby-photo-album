@@ -29,8 +29,8 @@ class App extends Component {
             <Container fluid>
                 <Row className='row-title'>
                     <Col>
-                        <h1 className='title'>Álbum de aventuras</h1>
-                        <h2 className='sub-title'>As estórias de um Pipitinho</h2>
+                        <h1 className='title'>As aventuras de Pipitinho</h1>
+                        <h2 className='sub-title'>Contadas pelo papai e a mamãe</h2>
                     </Col>
                 </Row>
                 <Route exact path="/" component={AlbumListView} />
