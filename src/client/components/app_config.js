@@ -1,80 +1,14 @@
-/* global Map */
 import ClientOAuth2 from 'client-oauth2';
 import {plugins, request} from 'popsicle';
-import { Album, Photo } from '../api/model';
+import { Album, Photo, Video } from '../api/model';
 import Promise from "promise";
-
-class Cache {
-    STORAGE_KEY = 'storageCache';
-    constructor() {
-        this._map = new Map();
-        this._load();
-    }
-
-    _load() {
-        let raw_content = window.localStorage.getItem(this.STORAGE_KEY);
-        if (raw_content) {
-            this._map = new Map(JSON.parse(raw_content));
-        }
-    }
-
-    _persist() {
-        window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...this._map]));
-    }
-
-    clear() {
-        this._map.clear();
-        this._persist();
-    }
-
-    get(key) {
-        return this._map.get(key);
-    }
-
-    getOrSet(key, func) {
-        let value = this.get(key);
-        if (value === undefined) {
-            value = func();
-            this.set(key, value);
-        }
-        return value;
-    }
-
-    async asyncGetOrSet(key, func) {
-        let value = this.get(key);
-        if (value === undefined) {
-            value = func().then((result) => {
-                this.set(key, result);
-                return result;
-            });
-        } else {
-            value = new Promise.resolve(value);
-        }
-        return value;
-    }
-
-    set(key, value) {
-        if (value === null || value == undefined) {
-            this.del(key);
-        } else {
-            this._map.set(key, value);
-        }
-        this._persist();
-        return value;
-    }
-
-    del(key) {
-        this._map.delete(key);
-        this._persist();
-        return this;
-    }
-}
+import Cache from "../cache.js";
 
 /**
  * Contains all Api and app parameters
  */
 class AppConfig {
-    AUTH_CACHE_KEY = 'auth_token';
+    AUTH_CACHE_KEY = '__auth_token';
     constructor() {
         this.cache = new Cache();
         this._signer = null;
@@ -121,7 +55,6 @@ class AppConfig {
             callback(false);
         };
         const success = (signer) => {
-            console.debug('authenticated', signer);
             this.cache.set(this.AUTH_CACHE_KEY, signer.accessToken);
             this._setup(signer);
             callback(true);
@@ -190,7 +123,7 @@ class AppConfig {
             );
         }).then((folders) => {
             folders = folders.sort((folderA, folderB) => (folderA.name.localeCompare(folderB.name)));
-            return folders.map((element) => {
+            return folders.filter((element) => 'folder' in element).map((element) => {
                 const albumId = element.id;
                 const albumName = element.description || element.name;
                 let coverPhoto = null;
@@ -286,31 +219,56 @@ class AppConfig {
         }).then(({directoryListing, comments}) => {
             console.log('directoryListing', directoryListing);
             // filtering photos
-            return directoryListing.filter((e) => e['photo']).map((element) => {
+            return directoryListing.filter((e) => e['photo'] || e['video']).map((element) => {
+                // check if is photo or video
                 const photoId = element.name;
                 const photoTitle = element.description;
-                const height = element.image && element.image.height;
-                const width = element.image && element.image.width;
                 const taken = (element.photo && element.photo.takenDateTime) || element.fileSystemInfo.createdDateTime || element.createdDateTime;
-                let photoImg = null;
+                let thumb = null;
                 if (element.thumbnails && element.thumbnails.length > 0) {
-                    photoImg = element.thumbnails[0]['large'].url;
+                    thumb = element.thumbnails[0]['large'];
                 }
-                return new Photo({
-                    albumId: albumId,
-                    id: photoId,
-                    title: photoTitle,
-                    image: photoImg,
-                    height: height,
-                    width: width,
-                    taken: taken ? new Date(taken) : null,
-                    comment: comments[photoId]
-                });
+                let photoImg = thumb && thumb.url;
+
+                const mimeType = element.file.mimeType || '';
+                if (mimeType.startsWith('video/')) {
+                    let play = element['@microsoft.graph.downloadUrl'];
+                    let height = (element.video.height && element.video.height) && (thumb && thumb.height);
+                    let width = (element.video.width && element.video.width) && (thumb && thumb.width);
+                    return new Video({
+                        albumId: albumId,
+                        id: photoId,
+                        title: photoTitle,
+                        image: photoImg,
+                        mimeType: mimeType,
+                        play: play,
+                        height: height,
+                        width: width,
+                        taken: taken ? new Date(taken) : null,
+                        comment: comments[photoId]
+                    });
+        
+                } else if (mimeType.startsWith('image/')) {
+                    let height = (element.image && element.image.height) && (thumb && thumb.height);
+                    let width = (element.image && element.image.width) && (thumb && thumb.width);
+                    return new Photo({
+                        albumId: albumId,
+                        id: photoId,
+                        title: photoTitle,
+                        image: photoImg,
+                        mimeType: mimeType,
+                        height: height,
+                        width: width,
+                        taken: taken ? new Date(taken) : null,
+                        comment: comments[photoId]
+                    });
+                }
+
             });
         }).then((photos) => {
-            // sort by date
-            photos.sort((photoA, photoB) => (photoA.taken || 0) - (photoB.taken || 0));
-            console.debug(`Photos from ${albumId}`, photos);
+            // remove unhandled mimetypes and sort by date
+            photos.filter((e) => e).sort((photoA, photoB) => (photoA.taken || 0) - (photoB.taken || 0));
+            console.debug(`From ${albumId}`, photos);
             return photos;
         });
     }

@@ -15,11 +15,12 @@ class Album {
 }
 
 class Photo {
-    constructor({albumId, id, title, image, comment, width, height, taken}) {
+    constructor({albumId, id, title, image, mimeType, comment, width, height, taken}) {
         this.albumId = albumId;
         this.id = id;
         this.title = title;
         this.image = image;
+        this.mimeType = mimeType;
         this.comment = comment;
         this.width = width;
         this.height = height;
@@ -31,4 +32,15 @@ class Photo {
     }
 }
 
-export { Album, Photo };
+class Video extends Photo {
+    constructor({albumId, id, title, image, mimeType, play, comment, width, height, taken}) {
+        super({albumId, id, title, image, mimeType, comment, width, height, taken});
+        this.play = play;
+    }
+
+    toString() {
+        return `Video ${this.title}: ${this.play}`;
+    }
+}
+
+export { Album, Photo, Video };

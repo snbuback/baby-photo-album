@@ -79,11 +79,27 @@ class PhotoView extends Component {
     get width() {
         const photoHeight = this.props.photo.height;
         const photoWidth = this.props.photo.width;
-        return Math.max(photoHeight && photoWidth ? (this.base_height / photoHeight * photoWidth) : 0, this.base_height);
+        const resizedWidth = Math.trunc(Math.max(photoHeight && photoWidth ? (this.base_height / photoHeight * photoWidth) : 0, this.base_height));
+        // console.info('photoHeight=', photoHeight, 'photoWidth=', photoWidth, 'resizedWidth=', resizedWidth);
+        return resizedWidth;
     }
 
     get height() {
         return this.base_height;
+    }
+
+    playElement() {
+        if (this.props.photo.play) {
+            return <video className="figure-img figure-video"
+                        height={this.height}
+                        width={this.width}
+                        controls
+                        poster={this.props.photo.url}
+                    >
+                <source src={this.props.photo.play} type={this.props.photo.mimeType} />
+            </video>;
+        }
+        return <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={{height: `${this.height}px`}} />;
     }
 
     render() {
@@ -91,7 +107,7 @@ class PhotoView extends Component {
             <Col>
                 <div className='card' style={{width: `${this.width}px`}}>
                     <figure className="figure">
-                        <img key={this.props.photo.id} src={this.props.photo.image} className="figure-img" alt={this.props.photo.name} style={{height: `${this.height}px`}} />
+                        {this.playElement()}
                         <figcaption className='figure-caption'>
                             <EditableText text={this.props.photo.title} invitation={this.props.photo.id} updateFunc={this.updateTitle} />
                         </figcaption>
