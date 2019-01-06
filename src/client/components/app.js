@@ -29,7 +29,7 @@ class App extends Component {
             <Container fluid>
                 <Row className='row-title'>
                     <Col>
-                        <h1 className='title'>As aventuras de Pipitinho</h1>
+                        <h1 className='title'><a href="/">As aventuras de Pipitinho</a></h1>
                         <h2 className='sub-title'>Contadas pelo papai e a mamãe</h2>
                     </Col>
                 </Row>

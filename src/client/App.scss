@@ -29,6 +29,12 @@ body {
         text-align: center;
         color: #2a83cc;
         font-family: "Mountains of Christmas", cursive;
+        a {
+            color: #2a83cc;
+            &:hover {
+                text-decoration: none;
+            }
+        }
     }
     .sub-title {
         @extend .align-items-center;
